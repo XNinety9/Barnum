@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "barnum"
+version = "0.2.0"
+description = "Horoscopes offline et déterministes, calculés sur le ciel réel."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+barnum = "barnum.cli:main"
+
+[tool.setuptools]
+packages = ["barnum"]
