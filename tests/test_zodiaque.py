@@ -19,6 +19,10 @@ class Recherche(unittest.TestCase):
         self.assertEqual(trouver_signe("belier").nom, "Bélier")
         self.assertEqual(trouver_signe(" GÉMEAUX ").nom, "Gémeaux")
 
+    def test_noms_anglais(self):
+        self.assertEqual(trouver_signe("Scorpio").nom, "Scorpion")
+        self.assertEqual(trouver_signe("capricorn").nom, "Capricorne")
+
     def test_inconnu(self):
         with self.assertRaises(ValueError):
             trouver_signe("ophiuchus")

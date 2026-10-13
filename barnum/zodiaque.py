@@ -1,12 +1,17 @@
-"""Vocabulaire du zodiaque : signes, astres, phases de lune."""
+"""Le zodiaque, indépendamment de la langue : signes, astres, phases de lune.
+
+Les noms français servent d'identifiants internes ; les libellés affichés
+viennent de barnum.langues."""
 import datetime as dt
 import unicodedata
 from typing import NamedTuple
 
+from .langues import LANGUES
+
 
 class Signe(NamedTuple):
     index: int  # 0 = Bélier, ordre zodiacal
-    nom: str
+    nom: str  # identifiant (français)
     symbole: str
     element: str
     maitre: str  # clé de ASTRES
@@ -32,27 +37,25 @@ SIGNES = [Signe(i, *s) for i, s in enumerate([
 class Astre(NamedTuple):
     nom: str
     symbole: str
-    sujet: str  # forme avec article, sujet d'une phrase
     nature: float  # > 0 bénéfique, < 0 maléfique (astrologie traditionnelle)
 
 
 ASTRES = {a.nom: a for a in [
-    Astre("Soleil", "☉", "le Soleil", 0.5),
-    Astre("Lune", "☽", "la Lune", 0.5),
-    Astre("Mercure", "☿", "Mercure", 0.5),
-    Astre("Vénus", "♀", "Vénus", 1.0),
-    Astre("Mars", "♂", "Mars", -0.5),
-    Astre("Jupiter", "♃", "Jupiter", 1.0),
-    Astre("Saturne", "♄", "Saturne", -1.0),
-    Astre("Uranus", "♅", "Uranus", -0.5),
-    Astre("Neptune", "♆", "Neptune", 0.0),
-    Astre("Pluton", "♇", "Pluton", -0.5),
+    Astre("Soleil", "☉", 0.5),
+    Astre("Lune", "☽", 0.5),
+    Astre("Mercure", "☿", 0.5),
+    Astre("Vénus", "♀", 1.0),
+    Astre("Mars", "♂", -0.5),
+    Astre("Jupiter", "♃", 1.0),
+    Astre("Saturne", "♄", -1.0),
+    Astre("Uranus", "♅", -0.5),
+    Astre("Neptune", "♆", 0.0),
+    Astre("Pluton", "♇", -0.5),
 ]}
 
 
 class Phase(NamedTuple):
-    nom: str
-    sujet: str
+    nom: str  # identifiant (français)
     groupe: str  # clé des effets de phase
     emoji: str
     debut: float  # élongation Lune - Soleil (degrés) à partir de laquelle elle commence
@@ -60,14 +63,14 @@ class Phase(NamedTuple):
 
 # Les phases principales ne durent qu'une journée de part et d'autre de l'instant exact.
 PHASES = [
-    Phase("nouvelle lune", "la nouvelle lune", "nouvelle", "🌑", -12),
-    Phase("premier croissant", "le premier croissant de lune", "croissante", "🌒", 12),
-    Phase("premier quartier", "le premier quartier de lune", "croissante", "🌓", 78),
-    Phase("lune gibbeuse croissante", "la lune gibbeuse croissante", "croissante", "🌔", 102),
-    Phase("pleine lune", "la pleine lune", "pleine", "🌕", 168),
-    Phase("lune gibbeuse décroissante", "la lune gibbeuse décroissante", "decroissante", "🌖", 192),
-    Phase("dernier quartier", "le dernier quartier de lune", "decroissante", "🌗", 258),
-    Phase("dernier croissant", "le dernier croissant de lune", "decroissante", "🌘", 282),
+    Phase("nouvelle lune", "nouvelle", "🌑", -12),
+    Phase("premier croissant", "croissante", "🌒", 12),
+    Phase("premier quartier", "croissante", "🌓", 78),
+    Phase("lune gibbeuse croissante", "croissante", "🌔", 102),
+    Phase("pleine lune", "pleine", "🌕", 168),
+    Phase("lune gibbeuse décroissante", "decroissante", "🌖", 192),
+    Phase("dernier quartier", "decroissante", "🌗", 258),
+    Phase("dernier croissant", "decroissante", "🌘", 282),
 ]
 
 
@@ -90,8 +93,10 @@ def normaliser(txt: str) -> str:
 
 
 def trouver_signe(nom: str) -> Signe:
-    for s in SIGNES:
-        if normaliser(s.nom) == normaliser(nom):
-            return s
+    """Accepte le nom du signe dans n'importe quelle langue disponible."""
+    for lg in LANGUES.values():
+        for i, libelle in enumerate(lg.signes):
+            if normaliser(libelle) == normaliser(nom):
+                return SIGNES[i]
     noms = ", ".join(s.nom for s in SIGNES)
     raise ValueError(f"signe inconnu : {nom!r} (attendu : {noms})")

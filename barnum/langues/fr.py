@@ -1,5 +1,8 @@
-"""Corpus de la grammaire. Les symboles dynamiques (transit du jour, astre
-influent…) sont injectés par lecture.py ; voir lecture.DYNAMIQUES."""
+"""Français. Les symboles dynamiques de la grammaire (transit du jour, astre
+influent…) sont injectés par redaction.py ; voir redaction.DYNAMIQUES."""
+import datetime as dt
+
+from .base import Langue
 
 BASE = {
     "transit_conj": ["{t_astre.cap} traverse votre signe et {t_effet}."],
@@ -100,11 +103,12 @@ BASE = {
         "Ce qui n'est pas dit ne peut pas être entendu.",
         "Ne remettez pas à demain ce qui vous libère aujourd'hui.",
     ],
-    "couleur": ["bleu nuit", "ocre", "vert sauge", "bordeaux", "turquoise",
-                "jaune moutarde", "gris perle", "corail", "violet", "ivoire"],
-    "humeur": ["conquérante", "rêveuse", "sereine", "joueuse", "nostalgique",
-               "électrique", "contemplative", "audacieuse"],
 }
+
+COULEURS = ("bleu nuit", "ocre", "vert sauge", "bordeaux", "turquoise",
+            "jaune moutarde", "gris perle", "corail", "violet", "ivoire")
+HUMEURS = ("conquérante", "rêveuse", "sereine", "joueuse", "nostalgique",
+           "électrique", "contemplative", "audacieuse")
 
 ELEMENTS = {
     "feu": {"trait": ["votre fougue", "votre enthousiasme", "votre impatience naturelle",
@@ -183,3 +187,56 @@ CONSEILS_RETRO = {
 }
 
 NOMBRES = {3: "trois", 4: "quatre", 5: "cinq", 6: "six", 7: "sept", 8: "huit"}
+
+JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+        "septembre", "octobre", "novembre", "décembre"]
+ARTICLES = {"Gémeaux": "les ", "Poissons": "les ", "Vierge": "la ", "Balance": "la "}
+
+
+def date_longue(d: dt.date) -> str:
+    return f"{JOURS[d.weekday()]} {d.day} {MOIS[d.month - 1]} {d.year}"
+
+
+def jusqua(d: dt.date) -> str:
+    return f" jusqu'au {'1er' if d.day == 1 else d.day} {MOIS[d.month - 1]}"
+
+
+LANGUE = Langue(
+    code="fr",
+    signes=("Bélier", "Taureau", "Gémeaux", "Cancer", "Lion", "Vierge", "Balance",
+            "Scorpion", "Sagittaire", "Capricorne", "Verseau", "Poissons"),
+    astres={"Soleil": ("Soleil", "le Soleil"), "Lune": ("Lune", "la Lune"),
+            "Mercure": ("Mercure", "Mercure"), "Vénus": ("Vénus", "Vénus"),
+            "Mars": ("Mars", "Mars"), "Jupiter": ("Jupiter", "Jupiter"),
+            "Saturne": ("Saturne", "Saturne"), "Uranus": ("Uranus", "Uranus"),
+            "Neptune": ("Neptune", "Neptune"), "Pluton": ("Pluton", "Pluton")},
+    phases={
+        "nouvelle lune": ("nouvelle lune", "la nouvelle lune"),
+        "premier croissant": ("premier croissant", "le premier croissant de lune"),
+        "premier quartier": ("premier quartier", "le premier quartier de lune"),
+        "lune gibbeuse croissante": ("lune gibbeuse croissante",
+                                     "la lune gibbeuse croissante"),
+        "pleine lune": ("pleine lune", "la pleine lune"),
+        "lune gibbeuse décroissante": ("lune gibbeuse décroissante",
+                                       "la lune gibbeuse décroissante"),
+        "dernier quartier": ("dernier quartier", "le dernier quartier de lune"),
+        "dernier croissant": ("dernier croissant", "le dernier croissant de lune"),
+    },
+    aspects={"sextile": "sextile", "trigone": "trigone", "carré": "carré",
+             "opposition": "opposition"},
+    domaines={
+        "amour": ("Amour", "En couple, {couple_%s} Célibataire, {celib_%s}"),
+        "travail": ("Travail", "{travail_%s} {travail_conseil}"),
+        "argent": ("Argent", "{argent_%s}"),
+        "forme": ("Forme", "{forme_%s}"),
+    },
+    etiquettes={"ciel": "Ciel", "climat": "Climat", "conseil": "Conseil",
+                "pied": "Couleur : {couleur} · Chiffre : {chiffre} · Humeur : {humeur}"},
+    base=BASE, elements=ELEMENTS, phase_effets=PHASE_EFFETS, effets=EFFETS,
+    conseils_retro=CONSEILS_RETRO, nombres=NOMBRES, couleurs=COULEURS, humeurs=HUMEURS,
+    depuis=lambda signe: ARTICLES.get(signe, "le ") + signe,
+    dans=lambda signe: f" en {signe}",
+    jusqua=jusqua,
+    date_longue=date_longue,
+)

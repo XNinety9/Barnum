@@ -1,6 +1,6 @@
 # Barnum
 
-Générateur d'horoscopes en français : offline, déterministe, sans dépendance.
+Générateur d'horoscopes en français et en anglais : offline, déterministe, sans dépendance.
 
 Le texte relève de l'[effet Barnum](https://fr.wikipedia.org/wiki/Effet_Barnum),
 mais le ciel, lui, est vrai. Les positions des planètes viennent des éléments
@@ -15,11 +15,16 @@ notes et le texte découlent de ces aspects.
     python3 main.py --naissance 1990-08-02
     python3 main.py scorpion --date 2026-12-25
     python3 main.py --json                 # pour une intégration
+    python3 main.py leo --lang en          # en anglais
 
 Ou, après `pip install -e .`, la commande `barnum`.
 
 Même date + même signe + même `--sel` = même horoscope, sur toute machine
 (le ciel est calculé à midi UTC).
+
+Les langues sont parallèles : pour un même jour et un même signe, l'horoscope
+anglais a les mêmes notes, le même transit, le même chiffre et la même couleur
+que le français. Seule la formulation change.
 
 ## Organisation
 
@@ -27,10 +32,17 @@ Même date + même signe + même `--sel` = même horoscope, sur toute machine
 |-----------------|------------------------------------------------------------|
 | `astro.py`      | éphémérides : longitudes, rétrogradations, élongation      |
 | `zodiaque.py`   | signes, astres, phases de lune                             |
-| `lecture.py`    | interprétation : aspects → notes → choix des formules      |
-| `textes.py`     | corpus de la grammaire                                     |
+| `lecture.py`    | interprétation, sans texte : aspects → notes, transit      |
+| `redaction.py`  | rédaction d'une lecture dans une langue                    |
+| `langues/`      | corpus et libellés : `fr.py`, `en.py`                      |
 | `grammaire.py`  | moteur d'expansion (style Tracery)                         |
 | `rendu.py`      | sortie terminal et JSON                                    |
+
+## Ajouter une langue
+
+Copier `langues/en.py`, traduire en gardant les mêmes symboles `{…}` et des
+listes de couleurs et d'humeurs parallèles, puis l'enregistrer dans
+`langues/__init__.py`. Le test `test_completude` signale tout oubli.
 
 ## Tests
 

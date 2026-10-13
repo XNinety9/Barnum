@@ -5,6 +5,8 @@
     barnum --naissance 1990-08-02   # signe déduit de la date de naissance
     barnum scorpion --date 2026-12-25 --ciel
     barnum --json
+    barnum leo --lang en            # en anglais (le nom du signe peut être dans
+                                    # n'importe quelle langue)
 """
 import argparse
 import datetime as dt
@@ -12,7 +14,8 @@ import json
 import sys
 
 from . import rendu
-from .lecture import horoscope
+from .langues import LANGUES, PAR_DEFAUT
+from .redaction import horoscope
 from .zodiaque import SIGNES, signe_de_naissance, trouver_signe
 
 
@@ -34,6 +37,8 @@ def main(argv=None) -> int:
     p.add_argument("--date", type=_date, default=None, metavar="AAAA-MM-JJ",
                    help="jour de l'horoscope (aujourd'hui par défaut)")
     p.add_argument("--sel", default="", help="change la série de formules générées")
+    p.add_argument("-l", "--lang", "--langue", dest="langue", default=PAR_DEFAUT,
+                   choices=sorted(LANGUES), help=f"langue de rédaction ({PAR_DEFAUT} par défaut)")
     p.add_argument("--ciel", action="store_true", help="affiche la position des astres")
     p.add_argument("--json", action="store_true", help="sortie JSON")
     a = p.parse_args(argv)
@@ -50,7 +55,7 @@ def main(argv=None) -> int:
     date = a.date or dt.date.today()
     if not 1800 <= date.year <= 2050:
         print("attention : éphémérides peu fiables hors de 1800-2050", file=sys.stderr)
-    hs = [horoscope(s, date, a.sel) for s in cibles]
+    hs = [horoscope(s, date, a.sel, a.langue) for s in cibles]
 
     if a.json:
         data = [rendu.dictionnaire(h) for h in hs]

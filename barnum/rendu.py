@@ -1,18 +1,12 @@
 """Mise en forme : texte pour le terminal, dictionnaire pour JSON."""
-import datetime as dt
 import textwrap
 
-from .lecture import MOIS, Horoscope
-from .zodiaque import ASTRES, SIGNES
+from .redaction import Horoscope
+from .zodiaque import ASTRES
 
-JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
 LARGEUR, MARGE = 72, 10
 RETRO = "℞"
-NBSP = "\u00a0"  # empêche textwrap de couper une position en deux
-
-
-def date_fr(d: dt.date) -> str:
-    return f"{JOURS[d.weekday()]} {d.day} {MOIS[d.month - 1]} {d.year}"
+NBSP = " "  # empêche textwrap de couper une position en deux
 
 
 def bloc(titre: str, texte: str, entete: str = "") -> list:
@@ -24,39 +18,49 @@ def etoiles(note: int) -> str:
     return "★" * note + "☆" * (5 - note)
 
 
-def ciel_texte(ciel: dict) -> str:
+def ciel_texte(h: Horoscope) -> str:
     return f"{NBSP}· ".join(
-        f"{ASTRES[a].symbole}{NBSP}{SIGNES[p.signe].nom}{NBSP}{int(p.degre)}°"
+        f"{ASTRES[a].symbole}{NBSP}{h.langue.signes[p.signe]}{NBSP}{int(p.degre)}°"
         + (f"{NBSP}{RETRO}" if p.retrograde else "")
-        for a, p in ciel.items())
+        for a, p in h.ciel.items())
 
 
 def texte(h: Horoscope, avec_ciel: bool = False) -> str:
-    lune = SIGNES[h.ciel["Lune"].signe].nom
-    out = [f"{h.signe.symbole}  {h.signe.nom.upper()} · {date_fr(h.date)}",
-           f"{h.phase.emoji}  {h.phase.nom.capitalize()} en {lune}", ""]
+    lg, et = h.langue, h.langue.etiquettes
+    lune = lg.signes[h.ciel["Lune"].signe]
+    phase = lg.phases[h.phase.nom][0]
+    out = [f"{h.signe.symbole}  {lg.signes[h.signe.index].upper()} · {lg.date_longue(h.date)}",
+           f"{h.phase.emoji}  {phase.capitalize()}{lg.dans(lune)}", ""]
     if avec_ciel:
-        out += bloc("Ciel", ciel_texte(h.ciel))
-    out += bloc("Climat", h.climat)
+        out += bloc(et["ciel"], ciel_texte(h))
+    out += bloc(et["climat"], h.climat)
     for d in h.domaines:
         out += bloc(d.libelle, d.texte, etoiles(d.note))
-    out += bloc("Conseil", h.conseil)
-    out += ["", f"Couleur : {h.couleur} · Chiffre : {h.chiffre} · Humeur : {h.humeur}"]
+    out += bloc(et["conseil"], h.conseil)
+    out += ["", et["pied"].format(couleur=h.couleur, chiffre=h.chiffre, humeur=h.humeur)]
     return "\n".join(out)
 
 
 def dictionnaire(h: Horoscope) -> dict:
+    """Clés stables (françaises) ; valeurs dans la langue de l'horoscope,
+    sauf les identifiants (signe_id, astre_id) qui ne changent jamais."""
+    lg = h.langue
+    nom_astre = lambda a: a and lg.astres[a][0]  # noqa: E731
     return {
-        "signe": h.signe.nom,
+        "langue": lg.code,
+        "signe": lg.signes[h.signe.index],
+        "signe_id": h.signe.index,
         "date": h.date.isoformat(),
-        "lune": {"phase": h.phase.nom, "signe": SIGNES[h.ciel["Lune"].signe].nom},
-        "ciel": [{"astre": a, "signe": SIGNES[p.signe].nom,
+        "lune": {"phase": lg.phases[h.phase.nom][0],
+                 "signe": lg.signes[h.ciel["Lune"].signe]},
+        "ciel": [{"astre": nom_astre(a), "astre_id": a, "signe": lg.signes[p.signe],
                   "degre": round(p.degre, 2), "retrograde": p.retrograde}
                  for a, p in h.ciel.items()],
-        "transit": h.transit and {"astre": h.transit.astre, "aspect": h.transit.aspect},
+        "transit": h.transit and {"astre": nom_astre(h.transit.astre),
+                                  "aspect": h.transit.aspect},
         "climat": h.climat,
-        "domaines": [{"cle": d.cle, "note": d.note, "texte": d.texte,
-                      "influence": d.influence} for d in h.domaines],
+        "domaines": [{"cle": d.cle, "libelle": d.libelle, "note": d.note, "texte": d.texte,
+                      "influence": nom_astre(d.influence)} for d in h.domaines],
         "conseil": h.conseil,
         "couleur": h.couleur,
         "chiffre": h.chiffre,
